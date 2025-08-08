@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Donation</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+   <script>
+
+    //for voice introduction    
+   window.onload = function () {
+    const message = "Hello, welcome to pulse & paw";
+    const utterance = new SpeechSynthesisUtterance(message);
+
+    // Load available voices
+    function setFemaleVoice() {
+      const voices = window.speechSynthesis.getVoices();
+      const femaleVoice = voices.find(voice => 
+        voice.name.toLowerCase().includes('female') ||
+        voice.name.toLowerCase().includes('woman') ||
+        voice.name.toLowerCase().includes('zira') ||  // Common on Windows
+        voice.name.toLowerCase().includes('google')   // Google voices are often clear
+      );
+
+      if (femaleVoice) {
+        utterance.voice = femaleVoice;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Some browsers load voices asynchronously
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = setFemaleVoice;
+    } else {
+      setFemaleVoice();
+    }
+  };
+  
+
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+                
+            });
+
+            // Show the selected section
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        function toggleDropdown() {
+            var account = document.querySelector('.account');
+            account.classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            var account = document.querySelector('.account');
+            if (!account.contains(event.target)) {
+                account.classList.remove('active');
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <div class="blood-drop" style="left: 40%; animation-delay: 0s;"></div>
+    <div class="blood-drop" style="left: 60%; animation-delay: 2s;"></div>
+
+
+    <div class="chat-container">
+        <div class="chat-header">HopeBot</div>
+        <div class="chat-box" id="chat-box">
+            <p>Need motivation? Click below!</p>
+        </div>
+        <button class="chat-button" onclick="getMotivation()">Get Motivation</button>
+    </div>
+
+    <script>
+        function getMotivation() {
+            fetch('/get_message', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                let chatBox = document.getElementById('chat-box');
+                chatBox.innerHTML = "<p>" + data.message + "</p>";
+            });
+        }
+    </script>
+    <header>
+        <div class="header-left">
+            <div class="account" onclick="toggleDropdown()">
+                <span class="account-icon">👤</span>
+                <div class="account-dropdown">
+                    <p><a href="/profile">My Profile</a></p>
+                    <p><a href="/login">Login</a></p>
+                    <p><a href="/logout">Logout</a></p>
+                </div>
+            </div>
+            <h1>Pulse & Paw</h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="/homepage">Home</a></li>
+                <li><a href="/donor" class="btn">Register as Donor</a></li>
+                <li><a href="/reciever" class="btn">Register as Receiver</a></li>
+                <li><a href="/pet" class="btn">Register as Pet Parent</a></li>
+                <li><a href="/eligibility_checker">Check your Eligibility</a></li>
+                 <!-- Find Blood Banks Button and Panel -->
+                 
+                 <div class="search-container">
+                    <input type="text" id="searchBar" class="search-bar" placeholder="Search Blood Banks" onkeyup="searchBloodBanks()">
+                    <div id="suggestions" class="suggestions"></div>
+                </div>
+                
+                <div id="detailsContainer" class="details-container"></div>
+                
+                <script>
+                    const bloodBanks = [
+                        { name: "Life Care Blood Bank", address: "204/1B, Linton St", phone: "033 2284 2298", hours: "Open 24 hours", desc: "The blood bank remains open 24/7." },
+                        { name: "People's Blood Bank", address: "G8GW+8FQ, Ashutosh College, Shyama Prasad Mukherjee Rd", phone: "033 2455 5164", hours: "Open 24 hours", desc: "Very fast and quick service." },
+                        { name: "OM Blood Bank Kolkata", address: "133, Sale Tax Office, H/1, Beleghata Main Rd", phone: "084799 19177", hours: "Open 24 hours", desc: "They have everything you need to have the quality of a blood bank." },
+                        { name: "Dr. T. B. Sen Memorial Veterinary Clinic", address: "69, Dr Suresh Sarkar Rd", phone: "098711 55162", hours: "Open 24 hours", desc: "30+ years in business." },
+                        { name: "PUPS & KITS PET HOSPITAL", address: "201/10/3/2, B/95, Survey Park Rd", phone: "089105 34300", hours: "Open 24 hours", desc: "Best Pet Hospital in Kolkata." },
+                        { name: "HAPPY PETS HOUSE VETERINARY CLINIC", address: "Howrah, West Bengal", phone: "090512 17025", hours: "Open 24 hours", desc: "7+ years in business." }
+                    ];
+                
+                    function searchBloodBanks() {
+                        let input = document.getElementById("searchBar").value.toLowerCase();
+                        let suggestionsContainer = document.getElementById("suggestions");
+                        suggestionsContainer.innerHTML = "";
+                
+                        if (input === "") {
+                            suggestionsContainer.style.display = "none";
+                            return;
+                        }
+                
+                        let filteredBanks = bloodBanks.filter(bank => bank.name.toLowerCase().includes(input));
+                        
+                        filteredBanks.forEach(bank => {
+                            let div = document.createElement("div");
+                            div.className = "suggestion-item";
+                            div.textContent = bank.name;
+                            div.onclick = () => showDetails(bank);
+                            suggestionsContainer.appendChild(div);
+                        });
+                
+                        suggestionsContainer.style.display = filteredBanks.length > 0 ? "block" : "none";
+                    }
+                
+                    function showDetails(bank) {
+                        document.getElementById("searchBar").value = bank.name;
+                        document.getElementById("suggestions").style.display = "none";
+                
+                        let detailsContainer = document.getElementById("detailsContainer");
+                        detailsContainer.innerHTML = `
+                            <h2>${bank.name}</h2>
+                            <p>📍 ${bank.address}</p>
+                            <p>📞 ${bank.phone}</p>
+                            <p>🕒 ${bank.hours}</p>
+                            <p>"${bank.desc}"</p>
+                            <button class="back-button" onclick="goBack()">⬅ Back</button>
+                        `;
+                        detailsContainer.style.display = "block";
+                    }
+                
+                    function goBack() {
+                        document.getElementById("detailsContainer").style.display = "none";
+                    }
+                </script>
+                
+                
+            </ul>
+        </nav>
+        <div class="header-right">
+            <div class="messages">
+                <label for="chat-toggle" class="messages-icon">📩</label>
+                <input type="checkbox" id="chat-toggle" class="chat-checkbox">
+        
+                <div class="chat-panel">
+                    <div class="chat-header">📩 Chat</div>
+                    <div class="chat-box" id="chat-box">
+                        {% for message in history %}
+                            <div class="message {{ 'sent' if message.sender == 'user' else 'received' }}">{{ message.text }}</div>
+                        {% endfor %} 
+                    </div>  
+                         
+                <div class="chat-input">
+                    <input type="text" id="userInput" placeholder="Type your message...">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+
+                    <p class="info">💡  Powered by AI – Your messages are stored for this session.</p>
+                </div>
+            </div>
+            <script>
+    const input = document.getElementById('user-input');
+    const button = document.getElementById('send-btn');
+    const chatBox = document.getElementById('chat-box');
+
+    function appendMessage(text, type) {
+        const msg = document.createElement('div');
+        msg.classList.add('message', type);
+        msg.textContent = text;
+        chatBox.appendChild(msg);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    button.addEventListener('click', async () => {
+        const message = input.value.trim();
+        if (!message) return;
+
+        appendMessage(message, 'sent');
+        input.value = '';
+
+        const response = await fetch('/send_message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+
+        const data = await response.json();
+        appendMessage(data.reply, 'received');
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            button.click();
+        }
+    });
+</script>
+            <div class="notifications">
+                <label for="notif-toggle" class="notifications-icon">🔔</label>
+                <input type="checkbox" id="notif-toggle" class="notif-checkbox">
+        
+                <div class="notifications-panel">
+                    <div class="notifications-header">🔔 Notifications</div>
+                    <div class="notification-item">🩸 <strong>Blood Donation Camp</strong> in your area!</div>
+                    <div class="notification-item">🏥 <strong>New Blood Bank</strong> opened nearby.</div>
+                    <div class="notification-item">🔍 <strong>Matching Donor</strong> found for your blood type.</div>
+                    <div class="notification-item">❤ <strong>Receiver Registered</strong> in your city.</div>
+                </div>
+            </div>
+        
+           
+            </div>
+        </div>
+        
+        <script>
+            function toggleBloodBanks() {
+                var panel = document.getElementById("bloodBanksPanel");
+                panel.style.display = (panel.style.display === "block") ? "none" : "block";
+            }
+        </script>
+    </header>
+    
+    <main>
+        <section class="hero">
+    <video autoplay loop muted playsinline class="human-dog-video" width="640" height="360">
+        <source src="../static/dog.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <h2>From Veins to Paws – Every Drop Counts</h2>
+    <p>Join our community of blood donors for both humans and dogs and help those in need.</p>
+    <a href="/appoin" class="btn">Make an Appointment</a>
+    <a href="/request_blood" class="btn">Request Blood</a>
+</section>
+
+        
+        
+            <section class="impact-container">
+                <h1 class="impact-heading">Our Impact</h1>
+                <p class="impact-subheading">Making a Difference, One Drop at a Time</p>
+            
+                <div class="impact-content">
+                    <p>Every day, countless lives are saved through the generosity of blood donors. At <strong>Pulse & Paw</strong>, we are committed to bridging the gap between donors and recipients, ensuring that no one has to suffer due to a lack of blood.</p>
+            
+                    <div class="impact-stats">
+                        <div class="stat-box">
+                            <h2>🌍 Our Reach</h2>
+                            <p>We have connected thousands of donors with patients in need, building a network of life-saving heroes.</p>
+                        </div>
+                        <div class="stat-box">
+                            <h2>❤ Lives Saved</h2>
+                            <p>Through our platform, we have facilitated countless successful blood donations, helping patients recover from surgeries, accidents, and life-threatening conditions.</p>
+                        </div>
+                        <div class="stat-box">
+                            <h2>🤝 Community Driven</h2>
+                            <p>With the support of volunteers, hospitals, and healthcare professionals, we are creating a culture where donating blood is easy, accessible, and impactful.</p>
+                        </div>
+                        <div class="stat-box">
+                            <h2>🐾 Saving Canine Lives</h2>
+                            <p>We connect pet owners, vets, and donors to ensure emergency blood availability for dogs, supporting veterinary care and raising donation awareness.
+
+                                🐶 Every drop counts, every paw matters!</p>
+                        </div>
+                    </div>
+            
+                    <p class="cta">Together, we are turning compassion into action. <strong>Join us and be a part of this life-saving movement!</strong></p>
+                </div>
+            </section>
+            <section class="about-us">
+                <h2>ABOUT US</h2>
+                <h3>Dedicated to Saving Lives Through Blood Donation.</h3>
+                <p>
+                    Every second, someone—whether human or animal—needs blood. Our dedicated team is committed to bridging the gap 
+                    between donors and recipients through a seamless, efficient, and reliable platform. By connecting volunteers, 
+                    hospitals, veterinary clinics, and those in urgent need, we ensure that no life—human or pet—is lost due to the 
+                    lack of blood.
+                </p>
+                <p>
+                    With advanced technology and a compassionate approach, we aim to create a network where donating blood is as easy 
+                    as scheduling an appointment, and finding a donor—whether for yourself, a loved one, or your pet—is just a few 
+                    clicks away.
+                </p>
+                <p class="cta">
+                    <strong>Join us today and be a hero—because every drop counts, for both humans and animals!</strong>
+                </p>
+           
+            
+        
+                        <section class="about">
+                            <div class="flip-container">
+                                <!-- Card 1 -->
+                                <div class="flip-card">
+                                    <div class="flip-card-inner">
+                                        <div class="flip-card-front">
+                                            <img src="../static/antara.JPG" alt="Blood Donation">
+                                        </div>
+                                        <div class="flip-card-back">
+                                            <p>Antara Malik</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Card 2 -->
+                                <div class="flip-card">
+                                    <div class="flip-card-inner">
+                                        <div class="flip-card-front">
+                                            <img src="../static/neelu.jpg" alt="Donor">
+                                        </div>
+                                        <div class="flip-card-back">
+                                            <p>Neelkantha Saha</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Card 3 -->
+                                <div class="flip-card">
+                                    <div class="flip-card-inner">
+                                        <div class="flip-card-front">
+                                            <img src="../static/Ram.jpeg" alt="Medical Support">
+                                        </div>
+                                        <div class="flip-card-back">
+                                            <p>Ramita Bala</p>
+                                        </div>
+                                    </div>
+                                </div>
+                
+                                <!-- Card 4 -->
+                                <div class="flip-card">
+                                    <div class="flip-card-inner">
+                                        <div class="flip-card-front">
+                                            <img src="../static/Sov.jpeg" alt="Life Saver">
+                                        </div>
+                                        <div class="flip-card-back">
+                                            <p>Sovan Ray</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </section>
+            
+            
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 Blood Donation Portal. All rights reserved.</p>
+    </footer>
+</body>
+<script>
+    async function sendMessage() {
+        const input = document.getElementById('userInput');
+        const chatBox = document.querySelector('.chat-box');
+        const userMessage = input.value.trim();
+
+        if (userMessage === '') return;
+
+        // Show user's message
+        const userDiv = document.createElement('div');
+        userDiv.className = 'message sent';
+        userDiv.textContent = userMessage;
+        chatBox.appendChild(userDiv);
+
+        // Clear input
+        input.value = '';
+
+        try {
+            const res = await fetch('/get_message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: userMessage })
+            });
+
+            const data = await res.json();
+
+            const aiDiv = document.createElement('div');
+            aiDiv.className = 'message received';
+            aiDiv.textContent = data.message;
+            chatBox.appendChild(aiDiv);
+
+            // Scroll to bottom
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+        } catch (err) {
+            console.error('Error:', err);
+        }
+    }
+</script>
+
+</html>
