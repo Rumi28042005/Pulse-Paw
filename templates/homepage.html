@@ -173,27 +173,58 @@
             </ul>
         </nav>
         <div class="header-right">
-            <div class="messages">
-                <label for="chat-toggle" class="messages-icon">📩</label>
-                <input type="checkbox" id="chat-toggle" class="chat-checkbox">
-        
-                <div class="chat-panel">
-                    <div class="chat-header">📩 Chat</div>
-                    <div class="chat-box" id="chat-box">
-                        {% for message in history %}
-                            <div class="message {{ 'sent' if message.sender == 'user' else 'received' }}">{{ message.text }}</div>
-                        {% endfor %} 
-                    </div>  
-                         
-                <div class="chat-input">
-                    <input type="text" id="userInput" placeholder="Type your message...">
-                    <button onclick="sendMessage()">Send</button>
-                </div>
+    <div class="messages">
+        <label for="chat-toggle" class="messages-icon">📩 Messages</label>
+        <input type="checkbox" id="chat-toggle" class="chat-checkbox">
 
-                    <p class="info">💡  Powered by AI – Your messages are stored for this session.</p>
-                </div>
+        <div class="chat-panel" id="chatbot-panel">
+            <div class="chat-header">📩 Chat</div>
+            <div class="chat-box" id="chatbot-box">
+                <div class="message received">Hello! How can I help you? 😊</div>
+                <div class="message sent">I want to donate blood! ❤</div>
             </div>
-            <script>
+            <div class="chat-input">
+                <input type="text" id="chatbot-input" placeholder="Type your message...">
+                <button id="chatbot-send-btn">Send</button>
+            </div>
+            <p class="info">💡 This is a UI-only chat. Backend needed for real chat.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Elements only for Chatbot (NOT HopeBot)
+    const chatbotSendBtn = document.getElementById("chatbot-send-btn");
+    const chatbotInput = document.getElementById("chatbot-input");
+    const chatbotBox = document.getElementById("chatbot-box");
+
+    function sendChatbotMessage() {
+        const message = chatbotInput.value.trim();
+        if (message !== "") {
+            // Create user message
+            const newMessage = document.createElement("div");
+            newMessage.classList.add("message", "sent");
+            newMessage.textContent = message;
+            chatbotBox.appendChild(newMessage);
+
+            // Scroll to bottom
+            chatbotBox.scrollTop = chatbotBox.scrollHeight;
+
+            // Clear input
+            chatbotInput.value = "";
+        }
+    }
+
+    chatbotSendBtn.addEventListener("click", sendChatbotMessage);
+
+    chatbotInput.addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+            sendChatbotMessage();
+        }
+    });
+</script>
+
+<script>
     const input = document.getElementById('user-input');
     const button = document.getElementById('send-btn');
     const chatBox = document.getElementById('chat-box');
